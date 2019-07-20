@@ -107,6 +107,36 @@ void rmtree(AVLTree *x) {
   free(x);
 }
 
+/* -------- deletetion routines --------- */
+
+void transplant(AVLTree *t, Node *u, Node *v) {
+  if (u->parent == NULL)
+    t->root = v;
+  else if (u == u->parent->left)
+    u->parent->left = v;
+  else
+    u->parent->right = v;
+  if (v != NULL) v->parent = u->parent;
+}
+
+void delete (AVLTree *t, Node *z) {
+  if (z->left == NULL)
+    transplant(t, z, z->right);
+  else if (z->right == NULL)
+    transplant(t, z, z->left);
+  else {
+    Node *y = tree_min(z->right);
+    if (y->parent != z) {
+      transplant(t, y, y->right);
+      y->right = z->right;
+      y->right->parent = y;
+    }
+    transplant(t, z, y);
+    y->left = z->left;
+    y->left->parent = y;
+  }
+}
+
 void test() {
   AVLTree *my = mktree();
 
@@ -115,7 +145,8 @@ void test() {
   }
 
   traverse(my->root);
-  free(my);
+
+  rmtree(my);
 }
 
 int main() {
