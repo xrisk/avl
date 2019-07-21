@@ -1,6 +1,10 @@
+#ifndef _avl_h
+
+#define _avl_h
+
 typedef struct Node {
   struct Node *parent, *left, *right;
-  int data;
+  int data, height;
 } Node;
 
 typedef struct AVLTree {
@@ -21,7 +25,6 @@ Node *predecessor(Node *x);
 
 Node *insert(AVLTree *t, Node *z);
 
-void free_node(Node *x);
-void free_tree(AVLTree *x);
-
 void delete_node(AVLTree *t, Node *z);
+
+#endif

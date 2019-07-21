@@ -5,18 +5,135 @@
 
 #include "avl.h"
 
-void traverse(Node *root) {
-  if (root != NULL) {
-    traverse(root->left);
-    printf("%d ", root->data);
-    traverse(root->right);
+/* ------ internal functions ------- */
+
+int max(const int a, const int b) { return (a > b) ? a : b; }
+
+void printnode(Node *root) {
+  printf("(%d H:%d L:%d R:%d P:%d) ", root->data, root->height,
+         (root->left != NULL) ? root->left->data : -1,
+         (root->right != NULL) ? root->right->data : -1,
+         (root->parent != NULL) ? root->parent->data : -1);
+}
+
+int height(Node *x) {
+  if (x == NULL)
+    return -1;
+  else
+    return x->height;
+}
+
+void update_height(Node *x) {
+  x->height = max(height(x->left), height(x->right)) + 1;
+}
+
+void left_rotate(AVLTree *t, Node *x);
+void right_rotate(AVLTree *t, Node *x);
+
+void free_node(Node *x) {
+  if (x == NULL)
+    return;
+  free_node(x->left);
+  free_node(x->right);
+  free(x);
+}
+
+void free_tree(AVLTree *x) {
+  if (x == NULL)
+    return;
+  free_node(x->root);
+  free(x);
+}
+
+void rebalance(AVLTree *t, Node *x) {
+  while (x != NULL) {
+    update_height(x);
+    if (height(x->left) >= 2 + height(x->right)) {
+      if (height(x->left->left) >= height(x->left->right))
+        right_rotate(t, x);
+      else {
+        left_rotate(t, x->left);
+        right_rotate(t, x);
+      }
+    } else if (height(x->right) >= 2 + height(x->left)) {
+      if (height(x->right->right) >= height(x->right->left))
+        left_rotate(t, x);
+      else {
+        right_rotate(t, x->right);
+        left_rotate(t, x);
+      }
+    }
+    if (x == x->parent) {
+      exit(1);
+    }
+    x = x->parent;
   }
 }
+
+/* x->right should not be NULL */
+void left_rotate(AVLTree *t, Node *x) {
+  Node *y = x->right;
+  assert(y != NULL);
+  x->right = y->left;
+  if (y->left != NULL)
+    y->left->parent = x;
+  y->parent = x->parent;
+  if (x->parent == NULL)
+    t->root = y;
+  else if (x == y->parent->left)
+    x->parent->left = y;
+  else
+    x->parent->right = y;
+  y->left = x;
+  x->parent = y;
+  update_height(x);
+  update_height(y);
+}
+
+/* y->left should not be NULL */
+void right_rotate(AVLTree *t, Node *y) {
+  Node *x = y->left;
+  assert(x != NULL);
+
+  y->left = x->right;
+  if (x->right != NULL)
+    x->right->parent = y;
+
+  if (y->parent == NULL)
+    t->root = x;
+  else if (y == y->parent->left)
+    y->parent->left = x;
+  else
+    y->parent->right = x;
+
+  x->right = y;
+  y->parent = x;
+  update_height(y);
+  update_height(x);
+}
+
+void verify_avl_property(Node *root) {
+  if (root == NULL)
+    return;
+  int s1 = height(root->left);
+  int s2 = height(root->right);
+  if (abs(s1 - s2) >= 2) {
+    printf("verifying avl property failed at node: %d\n", root->data);
+    exit(1);
+  }
+  verify_avl_property(root->left);
+  verify_avl_property(root->right);
+}
+
+/* -------------- begin avl.h functions ---------- */
 
 Node *mknode(int data) {
   Node *n = malloc(sizeof(Node));
   n->data = data;
-  n->left = NULL, n->right = NULL, n->parent = NULL;
+  n->left = NULL;
+  n->right = NULL;
+  n->parent = NULL;
+  n->height = 0;
   return n;
 }
 
@@ -24,6 +141,16 @@ AVLTree *mktree() {
   AVLTree *t = malloc(sizeof(AVLTree));
   t->root = NULL;
   return t;
+}
+
+void traverse(Node *root) {
+  if (root != NULL) {
+    traverse(root->left);
+    printnode(root);
+    traverse(root->right);
+  }
+
+  fflush(stdout);
 }
 
 Node *find(Node *root, int key) {
@@ -96,22 +223,8 @@ Node *insert(AVLTree *t, Node *z) {
     y->left = z;
   else
     y->right = z;
+  rebalance(t, z);
   return z;
-}
-
-void free_node(Node *x) {
-  if (x == NULL)
-    return;
-  free_node(x->left);
-  free_node(x->right);
-  free(x);
-}
-
-void free_tree(AVLTree *x) {
-  if (x == NULL)
-    return;
-  free_node(x->root);
-  free(x);
 }
 
 /* -------- deletetion routines --------- */
@@ -143,25 +256,20 @@ void delete_node(AVLTree *t, Node *z) {
     y->left = z->left;
     y->left->parent = y;
   }
+  rebalance(t, z->parent);
   free_node(z);
 }
 
 void test() {
   AVLTree *my = mktree();
 
-  int vals[] = {7, 11, 3, 9, 17, 12, 6, 1, 7, 16};
-
   for (int i = 0; i < 10; i++) {
-    insert(my, mknode(vals[i]));
+    insert(my, mknode(rand()));
   }
 
-  assert(tree_min(my->root)->data == 1);
-  delete_node(my, find(my->root, 1));
+  // traverse(my->root);
 
-  assert(tree_min(my->root)->data == 3);
-  assert(successor(find(my->root, 9))->data = 11);
-
-  traverse(my->root);
+  verify_avl_property(my->root);
 
   free_tree(my);
 }
