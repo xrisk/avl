@@ -21,5 +21,7 @@ Node *predecessor(Node *x);
 
 Node *insert(AVLTree *t, Node *z);
 
-void rmnode(Node *x);
-void rmtree(AVLTree *x);
+void free_node(Node *x);
+void free_tree(AVLTree *x);
+
+void delete_node(AVLTree *t, Node *z);

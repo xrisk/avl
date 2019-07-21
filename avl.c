@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -39,14 +40,18 @@ Node *find(Node *root, int key) {
 }
 
 Node *tree_min(Node *root) {
-  if (root == NULL) return root;
-  while (root->left) root = root->left;
+  if (root == NULL)
+    return root;
+  while (root->left)
+    root = root->left;
   return root;
 }
 
 Node *tree_max(Node *root) {
-  if (root == NULL) return root;
-  while (root->right) root = root->right;
+  if (root == NULL)
+    return root;
+  while (root->right)
+    root = root->right;
   return root;
 }
 
@@ -94,16 +99,18 @@ Node *insert(AVLTree *t, Node *z) {
   return z;
 }
 
-void rmnode(Node *x) {
-  if (x == NULL) return;
-  rmnode(x->left);
-  rmnode(x->right);
+void free_node(Node *x) {
+  if (x == NULL)
+    return;
+  free_node(x->left);
+  free_node(x->right);
   free(x);
 }
 
-void rmtree(AVLTree *x) {
-  if (x == NULL) return;
-  rmnode(x->root);
+void free_tree(AVLTree *x) {
+  if (x == NULL)
+    return;
+  free_node(x->root);
   free(x);
 }
 
@@ -116,10 +123,11 @@ void transplant(AVLTree *t, Node *u, Node *v) {
     u->parent->left = v;
   else
     u->parent->right = v;
-  if (v != NULL) v->parent = u->parent;
+  if (v != NULL)
+    v->parent = u->parent;
 }
 
-void delete (AVLTree *t, Node *z) {
+void delete_node(AVLTree *t, Node *z) {
   if (z->left == NULL)
     transplant(t, z, z->right);
   else if (z->right == NULL)
@@ -134,19 +142,28 @@ void delete (AVLTree *t, Node *z) {
     transplant(t, z, y);
     y->left = z->left;
     y->left->parent = y;
+    free_node(z);
   }
 }
 
 void test() {
   AVLTree *my = mktree();
 
+  int vals[] = {7, 11, 3, 9, 17, 12, 6, 1, 7, 16};
+
   for (int i = 0; i < 10; i++) {
-    insert(my, mknode(1 + rand() % 100));
+    insert(my, mknode(vals[i]));
   }
+
+  assert(tree_min(my->root)->data == 1);
+  delete_node(my, find(my->root, 1));
+
+  assert(tree_min(my->root)->data == 3);
+  assert(successor(find(my->root, 9))->data = 11);
 
   traverse(my->root);
 
-  rmtree(my);
+  free_tree(my);
 }
 
 int main() {
