@@ -142,8 +142,8 @@ void delete_node(AVLTree *t, Node *z) {
     transplant(t, z, y);
     y->left = z->left;
     y->left->parent = y;
-    free_node(z);
   }
+  free_node(z);
 }
 
 void test() {
