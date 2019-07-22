@@ -25,6 +25,9 @@ Node *predecessor(Node *x);
 
 Node *insert(AVLTree *t, Node *z);
 
+void free_tree(AVLTree *t);
 void delete_node(AVLTree *t, Node *z);
+
+void verify_avl_property(Node *root);
 
 #endif
