@@ -12,7 +12,7 @@ typedef struct AVLTree {
 } AVLTree;
 
 Node *mknode(int data);
-AVLTree *mktree();
+AVLTree *mktree(void);
 
 void traverse(Node *root);
 Node *find(Node *root, int key);
