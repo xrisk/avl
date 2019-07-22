@@ -48,6 +48,7 @@ void free_tree(AVLTree *x) {
   if (x == NULL)
     return;
   free_subtree(x->root);
+  free(x);
 }
 
 void rebalance(AVLTree *t, Node *x) {
@@ -67,9 +68,6 @@ void rebalance(AVLTree *t, Node *x) {
         right_rotate(t, x->right);
         left_rotate(t, x);
       }
-    }
-    if (x == x->parent) {
-      exit(1);
     }
     x = x->parent;
   }
