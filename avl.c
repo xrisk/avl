@@ -33,16 +33,21 @@ void right_rotate(AVLTree *t, Node *x);
 void free_node(Node *x) {
   if (x == NULL)
     return;
-  free_node(x->left);
-  free_node(x->right);
   free(x);
+}
+
+void free_subtree(Node *x) {
+  if (x == NULL)
+    return;
+  free_subtree(x->left);
+  free_subtree(x->right);
+  free_node(x);
 }
 
 void free_tree(AVLTree *x) {
   if (x == NULL)
     return;
-  free_node(x->root);
-  free(x);
+  free_subtree(x->root);
 }
 
 void rebalance(AVLTree *t, Node *x) {
@@ -74,18 +79,23 @@ void rebalance(AVLTree *t, Node *x) {
 void left_rotate(AVLTree *t, Node *x) {
   Node *y = x->right;
   assert(y != NULL);
+
   x->right = y->left;
   if (y->left != NULL)
     y->left->parent = x;
+
   y->parent = x->parent;
+
   if (x->parent == NULL)
     t->root = y;
   else if (x == y->parent->left)
     x->parent->left = y;
   else
     x->parent->right = y;
+
   y->left = x;
   x->parent = y;
+
   update_height(x);
   update_height(y);
 }
@@ -99,6 +109,8 @@ void right_rotate(AVLTree *t, Node *y) {
   if (x->right != NULL)
     x->right->parent = y;
 
+  x->parent = y->parent;
+
   if (y->parent == NULL)
     t->root = x;
   else if (y == y->parent->left)
@@ -108,6 +120,7 @@ void right_rotate(AVLTree *t, Node *y) {
 
   x->right = y;
   y->parent = x;
+
   update_height(y);
   update_height(x);
 }
@@ -263,21 +276,32 @@ void delete_node(AVLTree *t, Node *z) {
 void test() {
   AVLTree *my = mktree();
 
-  for (int i = 0; i < 10; i++) {
-    insert(my, mknode(rand()));
+  int arr[] = {100, 95, 23, 76, 1, 1, 46, 74, 15, 18, 11, 54};
+  int sz = sizeof(arr) / sizeof(int);
+
+  for (int i = 0; i < sz; i++) {
+    insert(my, mknode(arr[i]));
+    // traverse(my->root);
   }
 
-  // traverse(my->root);
-
+  traverse(my->root);
   verify_avl_property(my->root);
+
+  assert(tree_min(my->root)->data == 1);
+  assert(successor(find(my->root, 11))->data == 15);
+  assert(predecessor(find(my->root, 100))->data == 95);
+
+  insert(my, mknode(105));
+
+  assert(tree_max(my->root)->data == 105);
+  assert(successor(find(my->root, 100))->data == 105);
+
+  delete_node(my, find(my->root, 95));
+  assert(predecessor(find(my->root, 100))->data == 76);
 
   free_tree(my);
 }
 
-int main() {
-  srand(time(NULL));
-
-  test();
-}
+int main() { test(); }
 
 // vim: shiftwidth=2:softtabstop=2:expandtab
